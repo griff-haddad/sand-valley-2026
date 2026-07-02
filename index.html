@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<meta name="build-id" content="20260702-175832" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Sand Valley 2026 | July 8 to 12</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -543,9 +547,61 @@
     .event:hover { transform: none; }
     body { background: white; }
   }
+
+  /* ===== Update Toast ===== */
+  .update-toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 100;
+    background: var(--ink); color: white;
+    padding: 14px 18px; border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    display: none;
+    align-items: center; gap: 14px;
+    font-size: 13px;
+    max-width: 340px;
+    animation: toast-in .4s ease;
+  }
+  .update-toast.visible { display: flex; }
+  .update-toast .toast-text {
+    flex: 1; line-height: 1.4;
+  }
+  .update-toast .toast-text strong {
+    display: block; font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--sand-200); margin-bottom: 3px;
+  }
+  .update-toast .toast-btn {
+    background: white; color: var(--ink);
+    border: none; border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 12px; font-weight: 600; letter-spacing: .05em;
+    cursor: pointer;
+    transition: background .15s;
+    font-family: inherit;
+  }
+  .update-toast .toast-btn:hover { background: var(--sand-100); }
+  .update-toast .toast-close {
+    background: transparent; color: var(--sand-300); border: none;
+    font-size: 18px; line-height: 1; cursor: pointer; padding: 4px 8px;
+  }
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: none; }
+  }
+  @media (max-width: 520px) {
+    .update-toast { left: 16px; right: 16px; bottom: 16px; max-width: none; }
+  }
 </style>
 </head>
 <body>
+
+<!-- Update Toast (hidden until a new build is detected) -->
+<div class="update-toast" id="update-toast" role="status" aria-live="polite">
+  <div class="toast-text">
+    <strong>New version</strong>
+    Schedule or details have been updated.
+  </div>
+  <button class="toast-btn" onclick="location.reload()">Refresh</button>
+  <button class="toast-close" onclick="this.parentElement.classList.remove('visible')" aria-label="Dismiss">×</button>
+</div>
 
 <!-- ====================== NAV ====================== -->
 <nav class="nav">
@@ -1535,6 +1591,27 @@
   }
   tick();
   setInterval(tick, 1000);
+
+  // ---- Update check (polls every 3 min for a new build; shows toast if new) ----
+  (function() {
+    const meta = document.querySelector('meta[name="build-id"]');
+    if (!meta) return;
+    const currentBuild = meta.getAttribute('content');
+    if (!currentBuild || currentBuild === '20260702-175832') return;
+
+    async function checkForUpdate() {
+      try {
+        const res = await fetch(location.pathname + '?_=' + Date.now(), { cache: 'no-store' });
+        if (!res.ok) return;
+        const text = await res.text();
+        const match = text.match(/name="build-id"\s+content="([^"]+)"/);
+        if (match && match[1] && match[1] !== currentBuild) {
+          document.getElementById('update-toast').classList.add('visible');
+        }
+      } catch (e) { /* silent */ }
+    }
+    setInterval(checkForUpdate, 3 * 60 * 1000);
+  })();
 </script>
 
 </body>
