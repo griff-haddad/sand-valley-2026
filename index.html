@@ -248,6 +248,27 @@
     font-variant-numeric: tabular-nums;
   }
   .day-tab.active .day-weather { color: var(--sand-100); }
+  .day-forecast {
+    max-width: 720px; margin: 0 auto 32px;
+    padding: 16px 22px;
+    background: white; border: 1px solid var(--line); border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    display: flex; align-items: center; gap: 18px;
+    animation: fade .35s ease;
+  }
+  .day-forecast.hidden { display: none; }
+  .day-forecast .fc-icon {
+    font-size: 30px; line-height: 1; flex-shrink: 0;
+  }
+  .day-forecast .fc-body { flex: 1; min-width: 0; }
+  .day-forecast .fc-label {
+    display: block;
+    font-size: 10px; letter-spacing: .28em; text-transform: uppercase;
+    color: var(--sand-700); margin-bottom: 5px;
+  }
+  .day-forecast .fc-text {
+    font-size: 14px; color: var(--ink); line-height: 1.5;
+  }
 
   /* ===== Day Panel ===== */
   .day-panel { display: none; }
@@ -612,6 +633,13 @@
         <h3>Wednesday, July 8</h3>
         <div class="quote">"Burn the Boats"</div>
       </div>
+      <div class="day-forecast hidden" data-date="2026-07-08">
+        <div class="fc-icon">☀️</div>
+        <div class="fc-body">
+          <span class="fc-label">Forecast</span>
+          <div class="fc-text"></div>
+        </div>
+      </div>
       <div class="timeline">
 
         <div class="event free" data-type="free">
@@ -666,6 +694,13 @@
       <div class="day-header">
         <h3>Thursday, July 9</h3>
         <div class="quote">"Lead Off Homer"</div>
+      </div>
+      <div class="day-forecast hidden" data-date="2026-07-09">
+        <div class="fc-icon">☀️</div>
+        <div class="fc-body">
+          <span class="fc-label">Forecast</span>
+          <div class="fc-text"></div>
+        </div>
       </div>
       <div class="timeline">
 
@@ -784,6 +819,13 @@
         <h3>Friday, July 10</h3>
         <div class="quote">"Day of Rest"</div>
       </div>
+      <div class="day-forecast hidden" data-date="2026-07-10">
+        <div class="fc-icon">☀️</div>
+        <div class="fc-body">
+          <span class="fc-label">Forecast</span>
+          <div class="fc-text"></div>
+        </div>
+      </div>
       <div class="timeline">
 
         <div class="event free" data-type="free">
@@ -878,6 +920,13 @@
       <div class="day-header">
         <h3>Saturday, July 11</h3>
         <div class="quote">"Bob's Birthday"</div>
+      </div>
+      <div class="day-forecast hidden" data-date="2026-07-11">
+        <div class="fc-icon">☀️</div>
+        <div class="fc-body">
+          <span class="fc-label">Forecast</span>
+          <div class="fc-text"></div>
+        </div>
       </div>
       <div class="timeline">
 
@@ -993,6 +1042,13 @@
       <div class="day-header">
         <h3>Sunday, July 12</h3>
         <div class="quote">"Departure"</div>
+      </div>
+      <div class="day-forecast hidden" data-date="2026-07-12">
+        <div class="fc-icon">☀️</div>
+        <div class="fc-body">
+          <span class="fc-label">Forecast</span>
+          <div class="fc-text"></div>
+        </div>
       </div>
       <div class="timeline">
 
@@ -1365,37 +1421,86 @@
   // ---- Weather (Open-Meteo, no API key) ----
   (async () => {
     const cells = document.querySelectorAll('.day-weather');
-    if (!cells.length) return;
+    const forecasts = document.querySelectorAll('.day-forecast');
+    if (!cells.length && !forecasts.length) return;
+
+    const icon = code => {
+      if (code === 0) return '☀️';
+      if (code <= 3) return '⛅';
+      if (code <= 48) return '🌫️';
+      if (code <= 57) return '🌦️';
+      if (code <= 67) return '🌧️';
+      if (code <= 77) return '❄️';
+      if (code <= 82) return '🌦️';
+      if (code <= 86) return '🌨️';
+      if (code >= 95) return '⛈️';
+      return '';
+    };
+    const skyPhrase = code => {
+      if (code === 0)  return 'sunny skies';
+      if (code === 1)  return 'mostly sunny skies';
+      if (code === 2)  return 'partly cloudy skies';
+      if (code === 3)  return 'mostly cloudy skies';
+      if (code <= 48)  return 'foggy conditions';
+      if (code <= 57)  return 'light drizzle';
+      if (code <= 67)  return 'steady rain';
+      if (code <= 77)  return 'snow';
+      if (code <= 82)  return 'rain showers';
+      if (code <= 86)  return 'snow showers';
+      if (code >= 95)  return 'thunderstorms';
+      return 'mixed conditions';
+    };
+    const tempWord = hi => {
+      if (hi >= 90) return 'Hot';
+      if (hi >= 82) return 'Warm';
+      if (hi >= 75) return 'Comfortable';
+      if (hi >= 68) return 'Mild';
+      if (hi >= 60) return 'Cool';
+      return 'Chilly';
+    };
+    const buildSummary = (hi, lo, code, precipProb, wind) => {
+      const s1 = tempWord(hi) + ' with ' + skyPhrase(code) + ', a high near ' + hi + '°F and a low around ' + lo + '°F.';
+      let s2;
+      const w = Math.round(wind);
+      if (precipProb >= 60)      s2 = 'Rain looks likely (' + precipProb + '% chance) with winds around ' + w + ' mph. Pack the rain gear.';
+      else if (precipProb >= 35) s2 = 'Scattered showers possible (' + precipProb + '% chance) with winds around ' + w + ' mph.';
+      else if (precipProb >= 15) s2 = 'A small chance of showers (' + precipProb + '%) with winds around ' + w + ' mph.';
+      else                       s2 = 'Dry conditions expected with light winds around ' + w + ' mph.';
+      return s1 + ' ' + s2;
+    };
+
     try {
       const url = 'https://api.open-meteo.com/v1/forecast'
         + '?latitude=44.283&longitude=-90.003'
-        + '&daily=temperature_2m_max,temperature_2m_min,weather_code'
-        + '&temperature_unit=fahrenheit&timezone=America/Chicago'
+        + '&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,wind_speed_10m_max'
+        + '&temperature_unit=fahrenheit&wind_speed_unit=mph'
+        + '&timezone=America/Chicago'
         + '&start_date=2026-07-08&end_date=2026-07-12';
       const res = await fetch(url);
       if (!res.ok) throw new Error('weather api');
       const data = await res.json();
-      const icon = code => {
-        if (code === 0) return '☀️';
-        if (code <= 3) return '⛅';
-        if (code <= 48) return '🌫️';
-        if (code <= 57) return '🌦️';
-        if (code <= 67) return '🌧️';
-        if (code <= 77) return '❄️';
-        if (code <= 82) return '🌦️';
-        if (code <= 86) return '🌨️';
-        if (code >= 95) return '⛈️';
-        return '';
-      };
+
       data.daily.time.forEach((date, i) => {
-        const el = document.querySelector('.day-weather[data-date="' + date + '"]');
-        if (!el) return;
         const hi = Math.round(data.daily.temperature_2m_max[i]);
         const lo = Math.round(data.daily.temperature_2m_min[i]);
-        el.textContent = hi + '° / ' + lo + '° ' + icon(data.daily.weather_code[i]);
+        const code = data.daily.weather_code[i];
+        const prob = data.daily.precipitation_probability_max[i] ?? 0;
+        const wind = data.daily.wind_speed_10m_max[i] ?? 0;
+        const ic = icon(code);
+
+        const chip = document.querySelector('.day-weather[data-date="' + date + '"]');
+        if (chip) chip.textContent = hi + '° / ' + lo + '° ' + ic;
+
+        const panel = document.querySelector('.day-forecast[data-date="' + date + '"]');
+        if (panel) {
+          panel.querySelector('.fc-icon').textContent = ic;
+          panel.querySelector('.fc-text').textContent = buildSummary(hi, lo, code, prob, wind);
+          panel.classList.remove('hidden');
+        }
       });
     } catch (err) {
       cells.forEach(el => el.remove());
+      forecasts.forEach(el => el.remove());
     }
   })();
 
