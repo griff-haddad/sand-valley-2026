@@ -239,6 +239,15 @@
     font-family: 'Cormorant Garamond', serif;
     font-style: italic; font-size: 14px; color: var(--ink-soft);
   }
+  .day-weather {
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-top: 6px;
+    letter-spacing: .04em;
+    min-height: 14px;
+    font-variant-numeric: tabular-nums;
+  }
+  .day-tab.active .day-weather { color: var(--sand-100); }
 
   /* ===== Day Panel ===== */
   .day-panel { display: none; }
@@ -569,26 +578,31 @@
         <div class="day-name">Wed</div>
         <div class="day-num">7/8</div>
         <div class="day-theme">Burn the Boats</div>
+        <div class="day-weather" data-date="2026-07-08"></div>
       </div>
       <div class="day-tab" data-day="thu">
         <div class="day-name">Thu</div>
         <div class="day-num">7/9</div>
         <div class="day-theme">Lead Off Homer</div>
+        <div class="day-weather" data-date="2026-07-09"></div>
       </div>
       <div class="day-tab" data-day="fri">
         <div class="day-name">Fri</div>
         <div class="day-num">7/10</div>
         <div class="day-theme">Day of Rest</div>
+        <div class="day-weather" data-date="2026-07-10"></div>
       </div>
       <div class="day-tab" data-day="sat">
         <div class="day-name">Sat</div>
         <div class="day-num">7/11</div>
         <div class="day-theme">Bob's Birthday</div>
+        <div class="day-weather" data-date="2026-07-11"></div>
       </div>
       <div class="day-tab" data-day="sun">
         <div class="day-name">Sun</div>
         <div class="day-num">7/12</div>
         <div class="day-theme">Departure</div>
+        <div class="day-weather" data-date="2026-07-12"></div>
       </div>
     </div>
 
@@ -1347,6 +1361,43 @@
       });
     });
   });
+
+  // ---- Weather (Open-Meteo, no API key) ----
+  (async () => {
+    const cells = document.querySelectorAll('.day-weather');
+    if (!cells.length) return;
+    try {
+      const url = 'https://api.open-meteo.com/v1/forecast'
+        + '?latitude=44.283&longitude=-90.003'
+        + '&daily=temperature_2m_max,temperature_2m_min,weather_code'
+        + '&temperature_unit=fahrenheit&timezone=America/Chicago'
+        + '&start_date=2026-07-08&end_date=2026-07-12';
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('weather api');
+      const data = await res.json();
+      const icon = code => {
+        if (code === 0) return '☀️';
+        if (code <= 3) return '⛅';
+        if (code <= 48) return '🌫️';
+        if (code <= 57) return '🌦️';
+        if (code <= 67) return '🌧️';
+        if (code <= 77) return '❄️';
+        if (code <= 82) return '🌦️';
+        if (code <= 86) return '🌨️';
+        if (code >= 95) return '⛈️';
+        return '';
+      };
+      data.daily.time.forEach((date, i) => {
+        const el = document.querySelector('.day-weather[data-date="' + date + '"]');
+        if (!el) return;
+        const hi = Math.round(data.daily.temperature_2m_max[i]);
+        const lo = Math.round(data.daily.temperature_2m_min[i]);
+        el.textContent = hi + '° / ' + lo + '° ' + icon(data.daily.weather_code[i]);
+      });
+    } catch (err) {
+      cells.forEach(el => el.remove());
+    }
+  })();
 
   // ---- Countdown ----
   const target = new Date('2026-07-08T16:00:00-05:00').getTime();
