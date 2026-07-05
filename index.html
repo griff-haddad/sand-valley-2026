@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<meta name="build-id" content="20260704-204435" />
+<meta name="build-id" content="20260705-102246" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Sand Valley 2026 | July 8 to 12</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -81,6 +81,47 @@
   .nav-links a { color: var(--ink-soft); }
   .nav-links a:hover { color: var(--ink); }
   @media (max-width: 720px) { .nav-links { display: none; } }
+
+  /* ===== Leaderboard nav button + Cup ticker ===== */
+  .nav-right { display: flex; align-items: center; gap: 22px; }
+  .nav-cup {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600;
+    color: #fff; background: var(--ink); border-radius: 999px; padding: 8px 15px; white-space: nowrap;
+  }
+  .nav-cup:hover { color: #fff; background: #000; }
+  .nav-cup .live {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--golf);
+    box-shadow: 0 0 0 0 rgba(63,122,78,.5); animation: cupPulse 2.4s infinite;
+  }
+  @keyframes cupPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(63,122,78,.45); }
+    70%  { box-shadow: 0 0 0 8px rgba(63,122,78,0); }
+    100% { box-shadow: 0 0 0 0 rgba(63,122,78,0); }
+  }
+
+  .cup-ticker {
+    display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 9px 18px;
+    padding: 11px 20px; background: var(--sand-50); border-bottom: 1px solid var(--line);
+    font-size: 14px; color: var(--ink); transition: background .2s;
+  }
+  .cup-ticker:hover { background: var(--sand-100); color: var(--ink); }
+  .cup-ticker .tag {
+    font-family: 'Cormorant Garamond', serif; font-size: 16px; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--sand-700);
+  }
+  .cup-ticker .score { display: inline-flex; align-items: center; gap: 9px; font-variant-numeric: tabular-nums; }
+  .cup-ticker .tn { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; }
+  .cup-ticker .tn.yg { color: var(--golf); }
+  .cup-ticker .tn.og { color: var(--meal); }
+  .cup-ticker .num { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; line-height: 1; }
+  .cup-ticker .num.yg { color: var(--golf); }
+  .cup-ticker .num.og { color: var(--meal); }
+  .cup-ticker .sep { color: var(--ink-soft); }
+  .cup-ticker .meta { color: var(--ink-soft); font-size: 12.5px; }
+  .cup-ticker .cta { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; font-weight: 600; color: var(--golf); }
+  @media (max-width: 560px) { .cup-ticker .meta { display: none; } .cup-ticker { gap: 8px 12px; } }
+  @media (prefers-reduced-motion: reduce) { .nav-cup .live { animation: none; } }
 
   /* ===== Hero ===== */
   .hero {
@@ -610,14 +651,45 @@
       <img src="https://cdn.prod.website-files.com/6737a7bdc0fea540c46f4fb5/680149dff481c483f0a2c7a6_SandValley_Logo_Registered.svg" alt="Sand Valley" />
       <span>The 2026 Trip</span>
     </div>
-    <div class="nav-links">
-      <a href="#schedule">Schedule</a>
-      <a href="#courses">Courses</a>
-      <a href="#dining">Dining</a>
-      <a href="#logistics">Logistics</a>
+    <div class="nav-right">
+      <div class="nav-links">
+        <a href="#schedule">Schedule</a>
+        <a href="#courses">Courses</a>
+        <a href="#dining">Dining</a>
+        <a href="#logistics">Logistics</a>
+      </div>
+      <a class="nav-cup" href="scoreboard/"><span class="live"></span>Leaderboard</a>
     </div>
   </div>
 </nav>
+
+<!-- ====================== CUP TICKER ====================== -->
+<a class="cup-ticker" href="scoreboard/">
+  <span class="tag">The Sand Valley Cup</span>
+  <span class="score">
+    <span class="tn yg">Young Guns</span>
+    <span class="num yg" id="ct-yg">0</span>
+    <span class="sep">–</span>
+    <span class="num og" id="ct-og">0</span>
+    <span class="tn og">Old Guard</span>
+  </span>
+  <span class="meta" id="ct-status">First to 9.5 &middot; starts Wednesday</span>
+  <span class="cta">Leaderboard &rarr;</span>
+</a>
+<script>
+  (function () {
+    fetch('scoreboard/cup.json?_=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) return;
+        var f = function (n) { return Number.isInteger(n) ? n : n.toFixed(1); };
+        if ('yg' in d) document.getElementById('ct-yg').textContent = f(d.yg);
+        if ('og' in d) document.getElementById('ct-og').textContent = f(d.og);
+        if (d.status) document.getElementById('ct-status').textContent = d.status;
+      })
+      .catch(function () {});
+  })();
+</script>
 
 <!-- ====================== HERO ====================== -->
 <header class="hero">
