@@ -23,6 +23,8 @@ Private trip itinerary dashboard for the July 8 to July 12, 2026 group golf trip
 | `index.html` | The full dashboard, single self-contained file (~406 KB, Commons hero image base64-embedded) |
 | `assets/commons-card.png` | Source Canva image for The Commons course card (2000×1250 PNG, the only asset not fetched from a public CDN) |
 | `scripts/deploy.sh` | One-command deploy: copies source to repo, stamps a fresh build ID, commits, pushes |
+| `scoreboard/` | The Sand Valley Cup live scoreboard (team Cup, individual race, skins). See `scoreboard/README.md` |
+| `scripts/deploy-scoreboard.sh` | One-command deploy for the scoreboard (stamps build ID, commits, pushes) |
 | `README.md` | This file |
 
 ## Design System

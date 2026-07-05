@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="build-id" content="20260705-095137" />
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>The Sand Valley Cup — Live Scoreboard</title>
+<style>
+  :root{
+    --sand-50:#faf6ef; --sand-100:#f1ead9; --sand-200:#e3d6b9; --sand-300:#cdb98c;
+    --sand-400:#a89066; --sand-700:#5a4a30; --sand-900:#2a2418;
+    --ink:#1c1b18; --ink-soft:#5c5a52; --line:#e6dec9; --paper:#fbf8f1;
+    --yg:#3f7a4e; --yg-soft:#d8e7da; --yg-ink:#1f4429;      /* Young Guns  */
+    --og:#2f5d7c; --og-soft:#d4e2eb; --og-ink:#163445;      /* Old Guard   */
+    --gold:#c89321; --gold-soft:#f6e7bb; --gold-ink:#5f4108; /* skins / MVP */
+    --shadow-sm:0 1px 2px rgba(28,27,24,.06),0 1px 3px rgba(28,27,24,.05);
+    --shadow-md:0 4px 10px rgba(28,27,24,.06),0 12px 30px rgba(28,27,24,.08);
+    --shadow-lg:0 10px 30px rgba(28,27,24,.10),0 30px 60px rgba(28,27,24,.12);
+    --serif:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+    --sans:'Inter',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+    line-height:1.55;-webkit-font-smoothing:antialiased;font-weight:400}
+  h1,h2,h3,h4{font-family:var(--serif);font-weight:500;letter-spacing:-.01em;margin:0;text-wrap:balance}
+  a{color:inherit}
+  .tnum{font-variant-numeric:tabular-nums}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 22px}
+
+  /* sticky live bar */
+  .livebar{position:sticky;top:0;z-index:40;background:rgba(251,248,241,.93);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .livebar-inner{max-width:1000px;margin:0 auto;padding:9px 22px;display:flex;
+    align-items:center;justify-content:space-between;gap:14px}
+  .livebar .brand{font-family:var(--serif);font-size:19px;letter-spacing:.02em;white-space:nowrap}
+  .livebar .mini{display:flex;align-items:center;gap:10px;font-variant-numeric:tabular-nums}
+  .mini .team{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px}
+  .mini .swatch{width:9px;height:9px;border-radius:50%}
+  .mini .sc{font-family:var(--serif);font-size:24px;line-height:1;font-weight:600}
+  .mini .dash{color:var(--ink-soft)}
+  .livebar .backlink{font-size:12.5px;color:var(--ink-soft);text-decoration:none;
+    border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;white-space:nowrap}
+  .livebar .backlink:hover{border-color:var(--sand-300)}
+
+  /* hero */
+  .hero{text-align:center;padding:54px 0 30px}
+  .eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--sand-400);font-weight:600}
+  .hero h1{font-size:clamp(44px,9vw,86px);line-height:.98;margin:14px 0 6px}
+  .hero .sub{font-family:var(--serif);font-size:clamp(18px,3.4vw,24px);color:var(--ink-soft);font-style:italic}
+  .hero .rule{height:1px;width:min(340px,70%);margin:20px auto 0;
+    background:linear-gradient(90deg,transparent,var(--sand-300),transparent)}
+  .status{margin-top:18px;display:inline-flex;align-items:center;gap:9px;font-size:13px;
+    color:var(--ink-soft);background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 15px}
+  .pulse{width:8px;height:8px;border-radius:50%;background:var(--yg);box-shadow:0 0 0 0 rgba(63,122,78,.5);
+    animation:pulse 2.4s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(63,122,78,.45)}70%{box-shadow:0 0 0 9px rgba(63,122,78,0)}100%{box-shadow:0 0 0 0 rgba(63,122,78,0)}}
+
+  /* countdown */
+  .countdown{display:flex;justify-content:center;gap:22px;margin-top:22px}
+  .cd-unit{text-align:center;min-width:58px}
+  .cd-num{font-family:var(--serif);font-size:38px;line-height:1;font-variant-numeric:tabular-nums}
+  .cd-lab{font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--sand-400);margin-top:6px}
+
+  /* section frame */
+  section.blk{padding:34px 0}
+  .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+    margin-bottom:20px;border-bottom:1px solid var(--line);padding-bottom:12px}
+  .sec-head h2{font-size:clamp(26px,4.4vw,36px)}
+  .sec-head .note{font-size:12.5px;color:var(--ink-soft);text-align:right}
+
+  /* CUP METER */
+  .meter-card{background:#fff;border:1px solid var(--line);border-radius:18px;
+    box-shadow:var(--shadow-md);padding:26px clamp(18px,4vw,38px) 30px}
+  .meter-teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:14px;margin-bottom:20px}
+  .mt{display:flex;flex-direction:column}
+  .mt.og{text-align:right;align-items:flex-end}
+  .mt .name{font-family:var(--serif);font-size:clamp(20px,4vw,30px);font-weight:600;display:flex;align-items:center;gap:9px}
+  .mt.og .name{flex-direction:row-reverse}
+  .mt .cap{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);margin-top:3px}
+  .mt .cap.avg{margin-top:1px;color:var(--sand-400)}
+  .mt .big{font-family:var(--serif);font-size:clamp(50px,12vw,84px);line-height:.9;font-variant-numeric:tabular-nums;margin-top:8px}
+  .mt.yg .big{color:var(--yg)} .mt.og .big{color:var(--og)}
+  .mt .swatch{width:15px;height:15px;border-radius:50%}
+  .mt.yg .swatch{background:var(--yg)} .mt.og .swatch{background:var(--og)}
+  .meter-vs{font-family:var(--serif);font-style:italic;color:var(--sand-400);font-size:20px;padding-bottom:10px}
+
+  .bar-wrap{position:relative;margin:6px 0 4px}
+  .bar{height:26px;border-radius:999px;overflow:hidden;display:flex;background:var(--sand-100);
+    border:1px solid var(--line)}
+  .bar .fill-yg{background:linear-gradient(90deg,var(--yg),#4c8d5c);transition:width 1.1s cubic-bezier(.22,1,.36,1)}
+  .bar .fill-og{background:linear-gradient(270deg,var(--og),#3d7197);margin-left:auto;transition:width 1.1s cubic-bezier(.22,1,.36,1)}
+  .clinch{position:absolute;top:-7px;bottom:-7px;left:52.777%;width:2px;background:var(--gold);
+    box-shadow:0 0 0 1px rgba(251,248,241,.8)}
+  .clinch::after{content:"9.5 to clinch";position:absolute;top:-19px;left:50%;transform:translateX(-50%);
+    font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-ink);white-space:nowrap;font-weight:600}
+  .meter-foot{display:flex;justify-content:space-between;margin-top:16px;font-size:12.5px;color:var(--ink-soft)}
+  .meter-foot b{color:var(--ink);font-weight:600}
+
+  /* progress rail */
+  .rail{display:flex;gap:6px;margin-top:22px}
+  .rail .seg{flex:1;height:7px;border-radius:4px;background:var(--sand-100);position:relative;overflow:hidden}
+  .rail .seg i{position:absolute;inset:0;display:block}
+  .rail .seg .yg{background:var(--yg)} .rail .seg .og{background:var(--og)}
+
+  /* SESSIONS */
+  .sessions{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+  .ses{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-sm);
+    overflow:hidden;cursor:pointer;transition:box-shadow .2s,transform .2s;display:flex;flex-direction:column}
+  .ses:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+  .ses.final{border-color:var(--sand-300)}
+  .ses-top{padding:15px 17px 13px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .ses .sesno{font-family:var(--serif);font-size:13px;color:var(--sand-400);letter-spacing:.1em}
+  .ses .day{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
+  .ses h3{font-size:23px;margin:5px 0 2px}
+  .ses .fmt{font-size:12.5px;color:var(--ink-soft)}
+  .pts-badge{font-size:11px;font-weight:600;letter-spacing:.04em;background:var(--sand-100);
+    color:var(--sand-700);border-radius:999px;padding:4px 10px;white-space:nowrap}
+  .ses-result{border-top:1px dashed var(--line);padding:13px 17px;margin-top:auto;background:var(--sand-50)}
+  .ses.pending .ses-result{color:var(--ink-soft);font-size:13px;font-style:italic;font-family:var(--serif)}
+  .res-line{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .res-score{font-family:var(--serif);font-size:20px;font-variant-numeric:tabular-nums;font-weight:600}
+  .res-win{font-size:12px;font-weight:600;letter-spacing:.03em;padding:3px 9px;border-radius:999px}
+  .res-win.yg{background:var(--yg-soft);color:var(--yg-ink)}
+  .res-win.og{background:var(--og-soft);color:var(--og-ink)}
+  .res-win.halved{background:var(--sand-100);color:var(--sand-700)}
+  .ses-detail{max-height:0;overflow:hidden;transition:max-height .3s ease;background:#fff;border-top:0 solid var(--line)}
+  .ses.open .ses-detail{max-height:340px;border-top:1px solid var(--line)}
+  .ses-detail-in{padding:14px 17px;font-size:13px;color:var(--ink-soft)}
+  .ses-detail-in .dl{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dotted var(--line)}
+  .ses-detail-in .dl:last-child{border-bottom:0}
+  .ses-detail-in .dl span:last-child{color:var(--ink);font-weight:500;text-align:right}
+
+  /* two-column area */
+  .cols{display:grid;grid-template-columns:1.4fr 1fr;gap:22px;align-items:start}
+  @media(max-width:760px){.cols{grid-template-columns:1fr}}
+
+  /* leaderboard */
+  .lb{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-sm);overflow:hidden}
+  .lb-scroll{overflow-x:auto}
+  .lb table{width:100%;border-collapse:collapse;min-width:460px}
+  .lb th{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);
+    text-align:right;padding:11px 12px;background:var(--sand-50);font-weight:600;border-bottom:1px solid var(--line);white-space:nowrap}
+  .lb th:first-child{text-align:left}
+  .lb th.sortable{cursor:pointer;user-select:none}
+  .lb th.sortable:hover{color:var(--ink)}
+  .lb th.sorted{color:var(--ink)}
+  .lb th .arw{opacity:0;font-size:9px;margin-left:3px}
+  .lb th.sorted .arw{opacity:1;color:var(--gold-ink)}
+  .lb td{padding:10px 12px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;text-align:right}
+  .lb td:first-child{text-align:left}
+  .lb tr:last-child td{border-bottom:0}
+  .lb .pl{display:flex;align-items:center;gap:9px}
+  .lb .rk{font-family:var(--serif);font-size:17px;color:var(--sand-400);width:20px;font-variant-numeric:tabular-nums}
+  .lb .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .lb .dot.yg{background:var(--yg)} .lb .dot.og{background:var(--og)}
+  .lb .who b{font-weight:600}
+  .lb .who small{display:block;font-size:11px;color:var(--ink-soft)}
+  .lb .pts{font-family:var(--serif);font-size:20px;font-weight:600}
+  .lb .strokes{font-weight:600;font-size:14px}
+  .lb .topar{display:block;font-size:11px;margin-top:1px}
+  .lb .topar.under{color:var(--yg)} .lb .topar.over{color:var(--ink-soft)} .lb .topar.even{color:var(--gold-ink)}
+  .lb tr.leader td{background:linear-gradient(90deg,var(--gold-soft),transparent 70%)}
+  .crown{font-size:11px;color:var(--gold-ink);font-weight:600;letter-spacing:.04em}
+
+  /* MVP + skins side cards */
+  .sidecard{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-sm);
+    padding:18px 20px;margin-bottom:18px}
+  .sidecard .lab{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--sand-400);font-weight:600}
+  .mvp{background:linear-gradient(150deg,#fff,var(--gold-soft));border-color:var(--sand-300)}
+  .mvp .who{font-family:var(--serif);font-size:30px;font-weight:600;margin-top:4px}
+  .mvp .desc{font-size:13px;color:var(--ink-soft);margin-top:4px}
+  .stat-row{display:flex;gap:10px;margin-top:6px}
+  .stat{flex:1;text-align:center;background:var(--sand-50);border:1px solid var(--line);border-radius:11px;padding:12px 8px}
+  .stat .n{font-family:var(--serif);font-size:26px;font-weight:600;font-variant-numeric:tabular-nums}
+  .stat .k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-top:3px}
+
+  .skin-chart{display:flex;flex-direction:column;gap:11px;margin-top:14px}
+  .skin-row{display:grid;grid-template-columns:66px 1fr 64px;align-items:center;gap:11px}
+  .skin-row .nm{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .skin-track{background:var(--sand-100);border:1px solid var(--line);border-radius:7px;height:24px;overflow:hidden}
+  .skin-fill{height:100%;border-radius:6px;transition:width .9s cubic-bezier(.22,1,.36,1)}
+  .skin-fill.yg{background:linear-gradient(90deg,var(--yg),#4c8d5c)}
+  .skin-fill.og{background:linear-gradient(90deg,var(--og),#3d7197)}
+  .skin-row .amt{text-align:right;font-family:var(--serif);font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.05}
+  .skin-row .amt small{display:block;font-family:var(--sans);font-size:10px;font-weight:500;
+    color:var(--ink-soft);letter-spacing:.02em;margin-top:2px}
+  .skin-row.zero .amt{color:var(--ink-soft)}
+  .skin-list{list-style:none;margin:12px 0 0;padding:0}
+  .skin-list li{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px dotted var(--line);font-size:13.5px}
+  .skin-list li:last-child{border-bottom:0}
+  .skin-list .val{font-variant-numeric:tabular-nums;font-weight:600}
+  .carry{color:var(--gold-ink);font-weight:600}
+
+  /* rosters */
+  .rosters{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:680px){.rosters{grid-template-columns:1fr}}
+  .roster{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-sm);overflow:hidden}
+  .roster .rhead{padding:15px 18px;color:#fff;display:flex;justify-content:space-between;align-items:center}
+  .roster.yg .rhead{background:var(--yg)} .roster.og .rhead{background:var(--og)}
+  .roster .rhead .rt{font-family:var(--serif);font-size:22px}
+  .roster .rhead .idx{font-size:11px;opacity:.85;letter-spacing:.1em;text-transform:uppercase}
+  .roster ul{list-style:none;margin:0;padding:6px 0}
+  .roster li{display:flex;justify-content:space-between;padding:10px 18px;border-bottom:1px solid var(--line);font-size:14px}
+  .roster li:last-child{border-bottom:0}
+  .roster li .hcp{color:var(--ink-soft);font-variant-numeric:tabular-nums}
+  .roster li .cap-badge{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-ink);
+    background:var(--gold-soft);border-radius:4px;padding:2px 6px;margin-left:8px;vertical-align:middle}
+
+  .hcp-note{font-size:12px;color:var(--ink-soft);margin-top:14px;text-align:center}
+
+  /* demo toggle */
+  .demo{position:fixed;right:16px;bottom:16px;z-index:60;display:flex;gap:8px;align-items:center;
+    background:#fff;border:1px solid var(--line);box-shadow:var(--shadow-md);border-radius:999px;padding:7px 8px 7px 15px}
+  .demo span{font-size:12px;color:var(--ink-soft)}
+  .demo button{font-family:var(--sans);font-size:12.5px;font-weight:600;border:0;cursor:pointer;
+    background:var(--ink);color:#fff;border-radius:999px;padding:7px 14px}
+  .demo button:hover{background:var(--yg)}
+  .demo button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+  footer{border-top:1px solid var(--line);margin-top:20px;padding:26px 0 60px;text-align:center;
+    color:var(--ink-soft);font-size:12.5px}
+  footer .stakes{font-family:var(--serif);font-size:15px;color:var(--ink);margin-bottom:8px}
+
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* update toast (matches itinerary build-id system) */
+  .update-toast{position:fixed;left:16px;bottom:16px;z-index:70;background:var(--ink);color:#fff;
+    font-size:13px;border-radius:10px;padding:10px 14px;box-shadow:var(--shadow-md);
+    display:none;align-items:center;gap:9px;font-family:var(--sans)}
+  .update-toast.visible{display:flex}
+  .update-toast button{font:inherit;font-weight:600;background:var(--yg);color:#fff;border:0;
+    border-radius:7px;padding:5px 11px;cursor:pointer}
+  .update-toast button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+</style>
+</head>
+<body>
+
+
+<div class="livebar">
+  <div class="livebar-inner">
+    <div class="brand">The Cup</div>
+    <div class="mini tnum">
+      <div class="team"><span class="swatch" style="background:var(--yg)"></span>YG</div>
+      <span class="sc" id="mini-yg" style="color:var(--yg)">0</span>
+      <span class="dash">–</span>
+      <span class="sc" id="mini-og" style="color:var(--og)">0</span>
+      <div class="team"><span class="swatch" style="background:var(--og)"></span>OG</div>
+    </div>
+    <a class="backlink" href="../">← Itinerary</a>
+  </div>
+</div>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow">Sand Valley Resort · July 8–12, 2026</div>
+    <h1>The Sand&nbsp;Valley Cup</h1>
+    <div class="sub">Young Guns vs. Old Guard · first to 9.5 points takes it home</div>
+    <div class="rule"></div>
+    <div class="status"><span class="pulse"></span><span id="status-text">Pre-trip · first tee Wednesday 5:30 PM</span></div>
+    <div class="countdown" id="countdown"></div>
+  </header>
+</div>
+
+<div class="wrap">
+  <section class="blk">
+    <div class="meter-card">
+      <div class="meter-teams">
+        <div class="mt yg">
+          <div class="name"><span class="swatch"></span>Young Guns</div>
+          <div class="cap">Capt. Griffin Haddad</div>
+          <div class="cap avg">Avg index 9.6</div>
+          <div class="big tnum" id="score-yg">0</div>
+        </div>
+        <div class="meter-vs">vs</div>
+        <div class="mt og">
+          <div class="name">Old Guard<span class="swatch"></span></div>
+          <div class="cap">Capt. Bob Haddad</div>
+          <div class="cap avg">Avg index 9.5</div>
+          <div class="big tnum" id="score-og">0</div>
+        </div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar">
+          <div class="fill-yg" id="fill-yg" style="width:0%"></div>
+          <div class="fill-og" id="fill-og" style="width:0%"></div>
+        </div>
+        <div class="clinch"></div>
+      </div>
+      <div class="meter-foot">
+        <div><b id="played-pts">0</b> of 18 points played</div>
+        <div><b id="remain-pts">18</b> still in play</div>
+      </div>
+      <div class="rail" id="rail"></div>
+    </div>
+  </section>
+
+  <section class="blk" id="schedule">
+    <div class="sec-head">
+      <h2>The Sessions</h2>
+      <div class="note">Tap any session for format &amp; result</div>
+    </div>
+    <div class="sessions" id="sessions"></div>
+  </section>
+
+  <section class="blk" id="players">
+    <div class="sec-head">
+      <h2>Individual Race</h2>
+      <div class="note">Tap a column to sort · Player of the Week</div>
+    </div>
+    <div class="cols">
+      <div class="lb">
+        <div class="lb-scroll">
+        <table>
+          <thead><tr>
+            <th>Player</th>
+            <th>Thru</th>
+            <th class="sortable" data-sort="gross">Gross<span class="arw">▼</span></th>
+            <th class="sortable" data-sort="net">Net<span class="arw">▼</span></th>
+            <th class="sortable" data-sort="pts">Pts<span class="arw">▼</span></th>
+          </tr></thead>
+          <tbody id="lb-body"></tbody>
+        </table>
+        </div>
+      </div>
+      <div>
+        <div class="sidecard mvp">
+          <div class="lab">Daily MVP</div>
+          <div class="who" id="mvp-who">—</div>
+          <div class="desc" id="mvp-desc">Named after the first round is scored.</div>
+        </div>
+        <div class="sidecard">
+          <div class="lab">Player of the Week</div>
+          <div class="who" id="potw-who" style="font-family:var(--serif);font-size:26px;font-weight:600;margin-top:4px">—</div>
+          <div class="desc" id="potw-desc" style="font-size:13px;color:var(--ink-soft);margin-top:4px">The individual crown, decided on the final green Sunday.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="blk" id="skins">
+    <div class="sec-head">
+      <h2>The Skins Game</h2>
+      <div class="note">All 8 players · net · $2/person a hole · carries daily</div>
+    </div>
+    <div class="sidecard">
+      <div class="lab">Where the pot stands</div>
+      <div class="stat-row">
+        <div class="stat"><div class="n tnum" id="sk-pot">$0</div><div class="k">Pot</div></div>
+        <div class="stat"><div class="n tnum" id="sk-claimed">0</div><div class="k">Skins won</div></div>
+        <div class="stat"><div class="n tnum" id="sk-carry">0</div><div class="k">Carrying</div></div>
+      </div>
+      <div style="font-size:13px;color:var(--ink-soft);margin-top:12px" id="sk-note">
+        No holes played yet. The first skin is live Wednesday on The Sandbox.
+      </div>
+    </div>
+    <div class="sidecard">
+      <div class="lab">Winnings by player · ranked after each day</div>
+      <div class="skin-chart" id="sk-chart"></div>
+    </div>
+  </section>
+
+  <section class="blk" id="rosters">
+    <div class="sec-head">
+      <h2>The Rosters</h2>
+      <div class="note">Course handicaps shown for the Back tees</div>
+    </div>
+    <div class="rosters" id="rosters"></div>
+    <div class="hcp-note">Handicaps default to the Back tees. Sand Valley recommends 65% handicaps on The Commons; The Sandbox is a par-3 played gross.</div>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="stakes">Cup buy-in $100 · Skins $2 a hole · Side bets encouraged</div>
+    <div>The Sand Valley Cup · 5 days · 7 rounds · 6 courses · 8 golfers · one trophy</div>
+  </div>
+</footer>
+
+<div class="demo">
+  <span id="demo-label">Preview mode</span>
+  <button id="demo-btn" type="button">Show sample scores</button>
+</div>
+
+<script>
+/* ============================================================
+   DATA  — this is the only block that changes during the trip.
+   Each night I read the scorecard photos, compute results, and
+   update RESULTS / INDIVIDUAL / SKINS / META below, then push.
+   ============================================================ */
+
+const TEAMS = {
+  yg:{name:"Young Guns", key:"yg",
+    players:[
+      {name:"Radley Haddad", idx:3.7,  hcp:{md:6, lido:8, commons:2.5, sv:7, sedge:5}},
+      {name:"Griffin Haddad",idx:8.5,  cap:true, hcp:{md:12,lido:14,commons:5.5, sv:13,sedge:10}},
+      {name:"Andru Creighton",idx:10.4,hcp:{md:14,lido:17,commons:7,   sv:15,sedge:13}},
+      {name:"Zak Estes",     idx:15.8, hcp:{md:21,lido:24,commons:10,  sv:22,sedge:19}}
+    ]},
+  og:{name:"Old Guard", key:"og",
+    players:[
+      {name:"John Smeltzer", idx:5.3,  hcp:{md:8, lido:10,commons:3.5, sv:9, sedge:7}},
+      {name:"Steve Hullett", idx:7.3,  hcp:{md:10,lido:13,commons:5,   sv:12,sedge:9}},
+      {name:"Bob Haddad",    idx:9.1,  cap:true, hcp:{md:12,lido:15,commons:6,   sv:14,sedge:11}},
+      {name:"Mike Essex",    idx:16.3, hcp:{md:21,lido:25,commons:10.5,sv:23,sedge:19}}
+    ]}
+};
+
+const SESSIONS = [
+  {id:1, day:"Wed 7/8",  course:"The Sandbox",  fmt:"Best Ball",       detail:"1 of 4 front · 2 of 4 back", note:"17-hole par 3, played gross. Golf your ball.", pts:2},
+  {id:2, day:"Thu 7/9",  course:"Mammoth Dunes", fmt:"Stableford",     detail:"2 of 4 front · 1 of 4 back", note:"Birdie +3, par +2, bogey +1.", pts:2},
+  {id:3, day:"Thu 7/9",  course:"The Lido",      fmt:"Best Ball",      detail:"2 of 4 front · 3 of 4 back", note:"Net best ball, count best N per nine.", pts:2},
+  {id:4, day:"Fri 7/10", course:"The Commons",   fmt:"Mod. Stableford",detail:"3 of 4 front · 4 of 4 back", note:"Eagle +5, birdie +3, par +1, bogey 0, double −1. 65% handicap.", pts:2},
+  {id:5, day:"Sat 7/11", course:"Sand Valley",   fmt:"Singles Match Play", detail:"4 matches · captain's order 1–4", note:"1 point per match. 1v1, 2v2, 3v3, 4v4.", pts:4},
+  {id:6, day:"Sat 7/11", course:"Sedge Valley",  fmt:"Singles Match Play", detail:"4 matches · captain's order 1–4", note:"1 point per match.", pts:4},
+  {id:7, day:"Sun 7/12", course:"Mammoth Dunes", fmt:"Best Ball",      detail:"1 of 4 front · 1 of 4 back", note:"Closing round.", pts:2}
+];
+
+/* Live results. status: "pending" | "final".
+   For 2-point sessions, provide {yg, og} points (halves allowed).
+   For match-play sessions, provide {yg, og} out of 4.               */
+const EMPTY = {
+  results: SESSIONS.map(s=>({id:s.id, status:"pending", yg:0, og:0, blurb:""})),
+  individual: TEAMS.yg.players.concat(TEAMS.og.players).map(p=>({name:p.name, played:0, pts:0, gross:0, net:0, par:0})),
+  mvp:null, potw:null,
+  skins:{pot:0, claimed:0, carrying:0, list:[],
+    byPlayer: TEAMS.yg.players.concat(TEAMS.og.players).map(p=>({name:p.name, dollars:0, skins:0})),
+    note:"No holes played yet. The first skin is live Wednesday on The Sandbox."},
+  meta:{status:"Pre-trip · first tee Wednesday 5:30 PM", updated:""}
+};
+
+/* Sample data for the preview toggle (through Friday). */
+const DEMO = {
+  results:[
+    {id:1, status:"final", yg:1.5, og:0.5, blurb:"YG took the front, halved the back on The Sandbox."},
+    {id:2, status:"final", yg:0,   og:2,   blurb:"Old Guard swept both nines at Mammoth Dunes."},
+    {id:3, status:"final", yg:1,   og:1,   blurb:"Traded nines at The Lido — split points."},
+    {id:4, status:"final", yg:2,   og:0,   blurb:"Young Guns ran away with Modified Stableford at The Commons."},
+    {id:5, status:"pending", yg:0, og:0, blurb:""},
+    {id:6, status:"pending", yg:0, og:0, blurb:""},
+    {id:7, status:"pending", yg:0, og:0, blurb:""}
+  ],
+  /* par = total par of holes played through Friday (Sandbox 51 + Mammoth 73 + Lido 72 + Commons 45 = 241) */
+  individual:[
+    {name:"Griffin Haddad", played:4, pts:41, gross:289, net:251, par:241},
+    {name:"Radley Haddad",  played:4, pts:39, gross:271, net:246, par:241},
+    {name:"John Smeltzer",  played:4, pts:38, gross:279, net:248, par:241},
+    {name:"Bob Haddad",     played:4, pts:36, gross:292, net:252, par:241},
+    {name:"Steve Hullett",  played:4, pts:35, gross:285, net:250, par:241},
+    {name:"Andru Creighton",played:4, pts:33, gross:297, net:254, par:241},
+    {name:"Zak Estes",      played:4, pts:31, gross:312, net:256, par:241},
+    {name:"Mike Essex",     played:4, pts:28, gross:318, net:258, par:241}
+  ],
+  mvp:{who:"Bob Haddad", desc:"+11 Modified Stableford at The Commons — carried the Old Guard front nine single-handed."},
+  potw:{who:"Griffin Haddad", desc:"Leads the individual race by 2 through four rounds."},
+  skins:{pot:1040, claimed:31, carrying:4,
+    byPlayer:[
+      {name:"Radley Haddad",  dollars:208, skins:6},
+      {name:"John Smeltzer",  dollars:176, skins:5},
+      {name:"Zak Estes",      dollars:144, skins:4},
+      {name:"Bob Haddad",     dollars:128, skins:5},
+      {name:"Steve Hullett",  dollars:112, skins:4},
+      {name:"Griffin Haddad", dollars:96,  skins:3},
+      {name:"Andru Creighton",dollars:64,  skins:2},
+      {name:"Mike Essex",     dollars:48,  skins:2}
+    ],
+    list:[
+      {who:"Radley Haddad", where:"The Commons · 8", val:"$96 (6 carried)"},
+      {who:"Zak Estes",     where:"The Lido · 14",   val:"$32"},
+      {who:"John Smeltzer", where:"Mammoth · 5",     val:"$48 (3 carried)"},
+      {who:"Griffin Haddad",where:"The Sandbox · 12",val:"$16"}
+    ],
+    note:"4 holes carrying into Saturday at Sand Valley — worth $64 to the first man to break it."},
+  meta:{status:"Day 3 · Old Guard chasing at Sand Valley Saturday", updated:"Fri 10:40 PM"}
+};
+
+/* ---------- helpers ---------- */
+function teamOf(name){
+  return TEAMS.yg.players.some(p=>p.name===name) ? "yg" : "og";
+}
+const CUP_TOTAL = 18, CUP_TARGET = 9.5;
+const $ = s=>document.querySelector(s);
+
+/* ---------- render ---------- */
+function render(D){
+  const totYg = D.results.reduce((a,r)=>a+(r.status==="final"?r.yg:0),0);
+  const totOg = D.results.reduce((a,r)=>a+(r.status==="final"?r.og:0),0);
+  const played = D.results.reduce((a,r)=>a+(r.status==="final"?SESSIONS.find(s=>s.id===r.id).pts:0),0);
+
+  $("#score-yg").textContent = fmtPt(totYg);
+  $("#score-og").textContent = fmtPt(totOg);
+  $("#mini-yg").textContent = fmtPt(totYg);
+  $("#mini-og").textContent = fmtPt(totOg);
+  $("#played-pts").textContent = played;
+  $("#remain-pts").textContent = CUP_TOTAL - played;
+  $("#status-text").textContent = D.meta.status;
+
+  // bar: each side's share of the full 18
+  $("#fill-yg").style.width = (totYg/CUP_TOTAL*100)+"%";
+  $("#fill-og").style.width = (totOg/CUP_TOTAL*100)+"%";
+
+  // rail: one segment per session, sized by points
+  const rail = $("#rail"); rail.innerHTML="";
+  SESSIONS.forEach(s=>{
+    const r = D.results.find(x=>x.id===s.id);
+    const seg = document.createElement("div"); seg.className="seg"; seg.style.flex=s.pts;
+    if(r.status==="final"){
+      const ygPct = r.yg/(r.yg+r.og||1)*100;
+      seg.innerHTML = `<i class="yg" style="width:${ygPct}%"></i><i class="og" style="left:auto;right:0;width:${100-ygPct}%"></i>`;
+      seg.querySelectorAll("i").forEach(i=>{i.style.position="absolute";i.style.top=0;i.style.bottom=0;});
+      seg.querySelector(".og").style.right="0"; seg.querySelector(".og").style.left="auto";
+    }
+    rail.appendChild(seg);
+  });
+
+  // sessions
+  const wrap = $("#sessions"); wrap.innerHTML="";
+  SESSIONS.forEach(s=>{
+    const r = D.results.find(x=>x.id===s.id);
+    const el = document.createElement("div");
+    el.className = "ses "+(r.status==="final"?"final":"pending");
+    let resultHtml;
+    if(r.status==="final"){
+      const win = r.yg>r.og?"yg":r.og>r.yg?"og":"halved";
+      const label = win==="yg"?"Young Guns":win==="og"?"Old Guard":"Halved";
+      resultHtml = `<div class="res-line">
+          <span class="res-score">${fmtPt(r.yg)} – ${fmtPt(r.og)}</span>
+          <span class="res-win ${win}">${label}</span></div>
+        ${r.blurb?`<div style="font-size:12px;color:var(--ink-soft);margin-top:6px">${r.blurb}</div>`:""}`;
+    } else {
+      resultHtml = "Not yet played";
+    }
+    el.innerHTML = `
+      <div class="ses-top">
+        <div>
+          <div class="sesno">Session ${s.id}</div>
+          <h3>${s.course}</h3>
+          <div class="day">${s.day}</div>
+          <div class="fmt">${s.fmt} · ${s.pts} pts</div>
+        </div>
+        <span class="pts-badge">${s.fmt}</span>
+      </div>
+      <div class="ses-result">${resultHtml}</div>
+      <div class="ses-detail"><div class="ses-detail-in">
+        <div class="dl"><span>Format</span><span>${s.fmt}</span></div>
+        <div class="dl"><span>Counting</span><span>${s.detail}</span></div>
+        <div class="dl"><span>Points</span><span>${s.pts}</span></div>
+        <div class="dl"><span>Notes</span><span>${s.note}</span></div>
+      </div></div>`;
+    el.addEventListener("click",()=>el.classList.toggle("open"));
+    wrap.appendChild(el);
+  });
+
+  // individual leaderboard
+  currentData = D;
+  renderLeaderboard();
+
+  // mvp / potw
+  $("#mvp-who").textContent = D.mvp?D.mvp.who:"—";
+  $("#mvp-desc").textContent = D.mvp?D.mvp.desc:"Named after the first round is scored.";
+  $("#potw-who").textContent = D.potw?D.potw.who:"—";
+  $("#potw-desc").textContent = D.potw?D.potw.desc:"The individual crown, decided on the final green Sunday.";
+
+  // skins
+  $("#sk-pot").textContent = "$"+D.skins.pot.toLocaleString();
+  $("#sk-claimed").textContent = D.skins.claimed;
+  $("#sk-carry").textContent = D.skins.carrying;
+  $("#sk-note").textContent = D.skins.note;
+
+  // winnings bar chart (one bar per player, sorted by $)
+  const chart = $("#sk-chart");
+  const bp = [...(D.skins.byPlayer||[])].sort((a,b)=>b.dollars-a.dollars);
+  const max = Math.max(1, ...bp.map(p=>p.dollars));
+  chart.innerHTML = bp.map(p=>{
+    const t = teamOf(p.name);
+    const first = p.name.split(" ")[0];
+    const w = p.dollars>0 ? Math.max(p.dollars/max*100, 3) : 0;
+    const n = p.skins||0;
+    return `<div class="skin-row${p.dollars>0?"":" zero"}">
+      <span class="nm">${first}</span>
+      <div class="skin-track"><div class="skin-fill ${t}" style="width:${w}%"></div></div>
+      <span class="amt">$${p.dollars}<small>${n} ${n===1?"skin":"skins"}</small></span></div>`;
+  }).join("");
+}
+
+function fmtPt(n){ return Number.isInteger(n)?String(n):n.toFixed(1); }
+
+/* to-par cell: strokes on top, ± par below */
+function strokeCell(strokes, par){
+  if(!par || !strokes) return '<span class="strokes">–</span>';
+  const d = strokes - par;
+  const cls = d<0?"under":d>0?"over":"even";
+  const txt = d===0?"E":(d>0?"+"+d:String(d));
+  return `<span class="strokes">${strokes}</span><span class="topar ${cls}">${txt}</span>`;
+}
+
+/* leaderboard with sortable columns */
+let currentData = null;
+let sortKey = "pts";   // "pts" | "gross" | "net"
+function renderLeaderboard(){
+  if(!currentData) return;
+  const D = currentData;
+  const body = $("#lb-body"); body.innerHTML="";
+  const rows = [...D.individual];
+  rows.sort((a,b)=>{
+    if(sortKey==="pts")   return b.pts - a.pts;             // more is better
+    if(sortKey==="gross") return (a.gross||1e9) - (b.gross||1e9); // fewer is better
+    return (a.net||1e9) - (b.net||1e9);                    // net: fewer is better
+  });
+  const hasData = rows.some(p=>p.played>0);
+  const tag = sortKey==="pts"?"Leader":sortKey==="gross"?"Low gross":"Low net";
+  rows.forEach((p,i)=>{
+    const t = teamOf(p.name);
+    const tr = document.createElement("tr");
+    const lead = i===0 && hasData;
+    if(lead) tr.className="leader";
+    tr.innerHTML = `
+      <td><div class="pl"><span class="rk">${i+1}</span><span class="dot ${t}"></span>
+        <span class="who"><b>${p.name}</b><small>${t==="yg"?"Young Guns":"Old Guard"}${lead?` · <span class="crown">${tag}</span>`:""}</small></span></div></td>
+      <td>${p.played||"–"}</td>
+      <td>${strokeCell(p.gross,p.par)}</td>
+      <td>${strokeCell(p.net,p.par)}</td>
+      <td><span class="pts">${p.pts||"–"}</span></td>`;
+    body.appendChild(tr);
+  });
+  document.querySelectorAll(".lb th.sortable").forEach(th=>{
+    th.classList.toggle("sorted", th.dataset.sort===sortKey);
+  });
+}
+
+/* rosters (static) */
+function renderRosters(){
+  const wrap = $("#rosters"); wrap.innerHTML="";
+  [TEAMS.yg,TEAMS.og].forEach(t=>{
+    const avg = (t.players.reduce((a,p)=>a+p.idx,0)/t.players.length).toFixed(1);
+    const li = t.players.map(p=>`<li><span>${p.name}${p.cap?'<span class="cap-badge">Captain</span>':''}</span><span class="hcp">idx ${p.idx}</span></li>`).join("");
+    wrap.insertAdjacentHTML("beforeend",
+      `<div class="roster ${t.key}">
+        <div class="rhead"><span class="rt">${t.name}</span><span class="idx">Avg ${avg}</span></div>
+        <ul>${li}</ul></div>`);
+  });
+}
+
+/* countdown to first tee: 2026-07-08 17:30 local */
+function tick(){
+  const target = new Date(2026,6,8,17,30,0).getTime();
+  const now = Date.now();
+  let d = Math.max(0, target-now);
+  const days = Math.floor(d/864e5); d-=days*864e5;
+  const hrs = Math.floor(d/36e5); d-=hrs*36e5;
+  const min = Math.floor(d/6e4); d-=min*6e4;
+  const sec = Math.floor(d/1e3);
+  const cd = $("#countdown");
+  const parts = [["Days",days],["Hrs",hrs],["Min",min],["Sec",sec]];
+  cd.innerHTML = parts.map(([k,v])=>`<div class="cd-unit"><div class="cd-num tnum">${String(v).padStart(2,"0")}</div><div class="cd-lab">${k}</div></div>`).join("");
+}
+
+/* ---------- boot ---------- */
+let showingDemo = false;
+renderRosters();
+render(EMPTY);
+tick(); setInterval(tick,1000);
+
+document.querySelectorAll(".lb th.sortable").forEach(th=>{
+  th.addEventListener("click",()=>{ sortKey = th.dataset.sort; renderLeaderboard(); });
+});
+
+$("#demo-btn").addEventListener("click",()=>{
+  showingDemo = !showingDemo;
+  render(showingDemo?DEMO:EMPTY);
+  $("#demo-btn").textContent = showingDemo?"Reset to pre-trip":"Show sample scores";
+  $("#demo-label").textContent = showingDemo?"Sample data (through Friday)":"Preview mode";
+});
+</script>
+
+<div id="update-toast" class="update-toast">New scores posted <button type="button" onclick="location.reload()">Refresh</button></div>
+
+<script>
+/* update check — polls every 3 min for a new build id, matches the itinerary page */
+(function(){
+  const meta = document.querySelector('meta[name="build-id"]');
+  if(!meta) return;
+  const current = meta.getAttribute('content');
+  if(!current || current === '__BUILD_ID__') return;
+  async function check(){
+    try{
+      const res = await fetch(location.pathname + '?_=' + Date.now(), {cache:'no-store'});
+      if(!res.ok) return;
+      const t = await res.text();
+      const m = t.match(/name="build-id"\s+content="([^"]+)"/);
+      if(m && m[1] && m[1] !== current) document.getElementById('update-toast').classList.add('visible');
+    }catch(e){}
+  }
+  setInterval(check, 3*60*1000);
+})();
+</script>
+</body>
+</html>
