@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="build-id" content="20260705-095137" />
+<meta name="build-id" content="20260705-095856" />
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -309,7 +309,7 @@
   <section class="blk" id="players">
     <div class="sec-head">
       <h2>Individual Race</h2>
-      <div class="note">Tap a column to sort · Player of the Week</div>
+      <div class="note">Tap a column to sort · lowest net leads</div>
     </div>
     <div class="cols">
       <div class="lb">
@@ -320,7 +320,6 @@
             <th>Thru</th>
             <th class="sortable" data-sort="gross">Gross<span class="arw">▼</span></th>
             <th class="sortable" data-sort="net">Net<span class="arw">▼</span></th>
-            <th class="sortable" data-sort="pts">Pts<span class="arw">▼</span></th>
           </tr></thead>
           <tbody id="lb-body"></tbody>
         </table>
@@ -424,7 +423,7 @@ const SESSIONS = [
    For match-play sessions, provide {yg, og} out of 4.               */
 const EMPTY = {
   results: SESSIONS.map(s=>({id:s.id, status:"pending", yg:0, og:0, blurb:""})),
-  individual: TEAMS.yg.players.concat(TEAMS.og.players).map(p=>({name:p.name, played:0, pts:0, gross:0, net:0, par:0})),
+  individual: TEAMS.yg.players.concat(TEAMS.og.players).map(p=>({name:p.name, played:0, gross:0, net:0, par:0})),
   mvp:null, potw:null,
   skins:{pot:0, claimed:0, carrying:0, list:[],
     byPlayer: TEAMS.yg.players.concat(TEAMS.og.players).map(p=>({name:p.name, dollars:0, skins:0})),
@@ -445,17 +444,17 @@ const DEMO = {
   ],
   /* par = total par of holes played through Friday (Sandbox 51 + Mammoth 73 + Lido 72 + Commons 45 = 241) */
   individual:[
-    {name:"Griffin Haddad", played:4, pts:41, gross:289, net:251, par:241},
-    {name:"Radley Haddad",  played:4, pts:39, gross:271, net:246, par:241},
-    {name:"John Smeltzer",  played:4, pts:38, gross:279, net:248, par:241},
-    {name:"Bob Haddad",     played:4, pts:36, gross:292, net:252, par:241},
-    {name:"Steve Hullett",  played:4, pts:35, gross:285, net:250, par:241},
-    {name:"Andru Creighton",played:4, pts:33, gross:297, net:254, par:241},
-    {name:"Zak Estes",      played:4, pts:31, gross:312, net:256, par:241},
-    {name:"Mike Essex",     played:4, pts:28, gross:318, net:258, par:241}
+    {name:"Griffin Haddad", played:4, gross:289, net:251, par:241},
+    {name:"Radley Haddad",  played:4, gross:271, net:246, par:241},
+    {name:"John Smeltzer",  played:4, gross:279, net:248, par:241},
+    {name:"Bob Haddad",     played:4, gross:292, net:252, par:241},
+    {name:"Steve Hullett",  played:4, gross:285, net:250, par:241},
+    {name:"Andru Creighton",played:4, gross:297, net:254, par:241},
+    {name:"Zak Estes",      played:4, gross:312, net:256, par:241},
+    {name:"Mike Essex",     played:4, gross:318, net:258, par:241}
   ],
-  mvp:{who:"Bob Haddad", desc:"+11 Modified Stableford at The Commons — carried the Old Guard front nine single-handed."},
-  potw:{who:"Griffin Haddad", desc:"Leads the individual race by 2 through four rounds."},
+  mvp:{who:"Bob Haddad", desc:"Low round of the day — net 68 at The Commons, birthday boy delivered."},
+  potw:{who:"Radley Haddad", desc:"Lowest net for the week at +5 through Friday."},
   skins:{pot:1040, claimed:31, carrying:4,
     byPlayer:[
       {name:"Radley Haddad",  dollars:208, skins:6},
@@ -599,19 +598,18 @@ function strokeCell(strokes, par){
 
 /* leaderboard with sortable columns */
 let currentData = null;
-let sortKey = "pts";   // "pts" | "gross" | "net"
+let sortKey = "net";   // "net" | "gross"  (fewer is better)
 function renderLeaderboard(){
   if(!currentData) return;
   const D = currentData;
   const body = $("#lb-body"); body.innerHTML="";
   const rows = [...D.individual];
   rows.sort((a,b)=>{
-    if(sortKey==="pts")   return b.pts - a.pts;             // more is better
     if(sortKey==="gross") return (a.gross||1e9) - (b.gross||1e9); // fewer is better
-    return (a.net||1e9) - (b.net||1e9);                    // net: fewer is better
+    return (a.net||1e9) - (b.net||1e9);                          // net: fewer is better
   });
   const hasData = rows.some(p=>p.played>0);
-  const tag = sortKey==="pts"?"Leader":sortKey==="gross"?"Low gross":"Low net";
+  const tag = sortKey==="gross"?"Low gross":"Low net";
   rows.forEach((p,i)=>{
     const t = teamOf(p.name);
     const tr = document.createElement("tr");
@@ -622,8 +620,7 @@ function renderLeaderboard(){
         <span class="who"><b>${p.name}</b><small>${t==="yg"?"Young Guns":"Old Guard"}${lead?` · <span class="crown">${tag}</span>`:""}</small></span></div></td>
       <td>${p.played||"–"}</td>
       <td>${strokeCell(p.gross,p.par)}</td>
-      <td>${strokeCell(p.net,p.par)}</td>
-      <td><span class="pts">${p.pts||"–"}</span></td>`;
+      <td>${strokeCell(p.net,p.par)}</td>`;
     body.appendChild(tr);
   });
   document.querySelectorAll(".lb th.sortable").forEach(th=>{
@@ -679,7 +676,6 @@ $("#demo-btn").addEventListener("click",()=>{
 <div id="update-toast" class="update-toast">New scores posted <button type="button" onclick="location.reload()">Refresh</button></div>
 
 <script>
-/* update check — polls every 3 min for a new build id, matches the itinerary page */
 (function(){
   const meta = document.querySelector('meta[name="build-id"]');
   if(!meta) return;
