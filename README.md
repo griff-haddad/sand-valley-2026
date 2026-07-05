@@ -22,6 +22,7 @@ Private trip itinerary dashboard for the July 8 to July 12, 2026 group golf trip
 |---|---|
 | `index.html` | The full dashboard, single self-contained file (~406 KB, Commons hero image base64-embedded) |
 | `assets/commons-card.png` | Source Canva image for The Commons course card (2000×1250 PNG, the only asset not fetched from a public CDN) |
+| `scripts/deploy.sh` | One-command deploy: copies source to repo, stamps a fresh build ID, commits, pushes |
 | `README.md` | This file |
 
 ## Design System
@@ -47,23 +48,19 @@ Private trip itinerary dashboard for the July 8 to July 12, 2026 group golf trip
 ## Updating the Dashboard
 
 1. Edit the source file at `/Users/griff/Downloads/sand-valley-2026.html`
-2. Copy to the deploy clone:
+2. Run the deploy script:
    ```bash
-   cp "/Users/griff/Downloads/sand-valley-2026.html" /tmp/sv2026-deploy/index.html
+   /Users/griff/Downloads/deploy-sv2026.sh "Your commit message"
    ```
-3. Push:
-   ```bash
-   cd /tmp/sv2026-deploy
-   git add index.html
-   git commit -m "Update dashboard"
-   git push
-   ```
-4. GitHub Pages redeploys automatically in ~30 seconds.
+3. GitHub Pages redeploys automatically in ~30 seconds. If any viewers have the page open, they'll see a "New version available" toast within about 3 minutes.
 
-If `/tmp/sv2026-deploy/` is gone (e.g., after a reboot), re-clone:
-```bash
-cd /tmp && git clone https://github.com/griff-haddad/sand-valley-2026.git sv2026-deploy
-```
+**What the script does:** copies the source file into the deploy clone at `/tmp/sv2026-deploy/`, stamps a fresh build ID (needed for the update-detection toast to fire), commits, and pushes. If the deploy clone is missing (e.g., after a reboot cleared `/tmp/`), the script re-clones automatically.
+
+An identical copy of the script lives in this repo at `scripts/deploy.sh` for archival purposes.
+
+## Update Detection (Toast)
+
+Each deployed HTML carries a `<meta name="build-id">` tag stamped at deploy time. On page load, JavaScript polls the site every 3 minutes and compares the current build ID against the one loaded. If they differ, a small "New version available" toast appears in the bottom-right corner offering a one-click refresh. Users who don't have the page open when an update lands will see the fresh version on their next natural visit.
 
 ## Sources & Credits
 
