@@ -14,6 +14,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 FILE="scoreboard/index.html"
+CUP="scoreboard/cup.json"
 COMMIT_MSG="${1:-Update scoreboard}"
 
 if [[ ! -f "$FILE" ]]; then
@@ -25,12 +26,14 @@ BUILD_ID=$(date +"%Y%m%d-%H%M%S")
 sed -i.bak "s/name=\"build-id\" content=\"[^\"]*\"/name=\"build-id\" content=\"$BUILD_ID\"/" "$FILE"
 rm -f "$FILE.bak"
 
-if git diff --quiet "$FILE"; then
+# cup.json feeds the ticker on the itinerary page. It changes on its own schedule,
+# so include it whenever it has been edited.
+if git diff --quiet "$FILE" "$CUP"; then
   echo "No changes to deploy — scoreboard is identical to the last deploy."
   exit 0
 fi
 
-git add "$FILE"
+git add "$FILE" "$CUP"
 git commit -m "$COMMIT_MSG (build $BUILD_ID)" > /dev/null
 git push origin main > /dev/null 2>&1
 

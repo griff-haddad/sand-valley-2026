@@ -98,6 +98,19 @@ Course keys: `md` Mammoth Dunes, `lido` The Lido, `commons` The Commons (65%),
 There are two data objects: `EMPTY` (pre-trip zeros, shown by default) and `DEMO`
 (sample preview). During the trip, update `EMPTY`.
 
+### `cup.json` — feeds the itinerary ticker
+The itinerary page shows a slim Cup ticker under the nav that reads
+`scoreboard/cup.json`:
+
+```json
+{ "yg": 0, "og": 0, "target": 9.5, "total": 18, "status": "...", "updated": "" }
+```
+
+Each night, after updating the scoreboard's Cup total, set `yg` / `og` here to the
+same running score and update `status` (e.g. "Day 3 · Old Guard chasing"). The
+deploy script commits it automatically. The itinerary HTML itself never needs
+editing again — only this file changes.
+
 ---
 
 ## 5. Deploying an update
