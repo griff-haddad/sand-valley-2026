@@ -38,7 +38,7 @@ button script, and the `DEMO` object.
 | **Hero** | Title, dates, live status line, countdown to first tee |
 | **Cup Meter** | Ryder Cup tug-of-war bar toward the gold 9.5 clinch line, plus a per-session rail |
 | **The Sessions** | All 7 sessions as cards. Tap to expand format, counting rule, result |
-| **Individual Race** | Sortable table: Thru, Gross (with to-par), Net (with to-par), Pts. Crowns Player of the Week and Daily MVP |
+| **Individual Race** | Sortable table: Thru, Gross (with to-par), Net (with to-par). Lowest net leads; crowns Player of the Week and Daily MVP |
 | **The Skins Game** | Pot / skins won / carrying stats, plus a per-player winnings bar chart ranked by dollars, with skins count |
 | **The Rosters** | Both teams with indexes and captain badges |
 
@@ -91,7 +91,7 @@ Course keys: `md` Mammoth Dunes, `lido` The Lido, `commons` The Commons (65%),
 
 ### Live data (edit nightly)
 - `results[]` — per session `{id, status:"pending"|"final", yg, og, blurb}` (points, halves ok).
-- `individual[]` — `{name, played, pts, gross, net, par}` where `par` = total par of holes played so far (to-par = strokes − par).
+- `individual[]` — `{name, played, gross, net, par}` where `par` = total par of holes played so far (to-par = strokes − par). Lowest net is the individual leader.
 - `skins` — `{pot, claimed, carrying, byPlayer:[{name, dollars, skins}], note}`.
 - `mvp` — `{who, desc}`; `potw` — `{who, desc}`; `meta` — `{status, updated}`.
 
@@ -144,8 +144,8 @@ If the file is ever lost, this prompt rebuilds it:
 > data with tabular numerals. Sections: sticky live tally bar; hero with countdown
 > to first tee; a Cup Meter tug-of-war bar toward a 9.5 clinch line with a
 > per-session rail; 7 tappable session cards; a sortable individual race table
-> (Thru, Gross with to-par, Net with to-par, Points) crowning Player of the Week
-> and a Daily MVP; a skins game with pot/won/carrying stats and a per-player
+> (Thru, Gross with to-par, Net with to-par) where lowest net leads and crowns
+> Player of the Week, plus a Daily MVP; a skins game with pot/won/carrying stats and a per-player
 > winnings bar chart ranked by dollars with skins counts; and team rosters with
 > captain badges. Drive everything from one editable DATA block so scores can be
 > updated by hand each night. Use the teams, indexes, sessions, and scoring rules
