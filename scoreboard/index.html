@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="build-id" content="20260705-095856" />
+<meta name="build-id" content="20260709-202517" />
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -379,11 +379,6 @@
   </div>
 </footer>
 
-<div class="demo">
-  <span id="demo-label">Preview mode</span>
-  <button id="demo-btn" type="button">Show sample scores</button>
-</div>
-
 <script>
 /* ============================================================
    DATA  — this is the only block that changes during the trip.
@@ -418,62 +413,50 @@ const SESSIONS = [
   {id:7, day:"Sun 7/12", course:"Mammoth Dunes", fmt:"Best Ball",      detail:"1 of 4 front · 1 of 4 back", note:"Closing round.", pts:2}
 ];
 
-/* Live results. status: "pending" | "final".
-   For 2-point sessions, provide {yg, og} points (halves allowed).
-   For match-play sessions, provide {yg, og} out of 4.               */
+/* ============================================================
+   LIVE DATA — updated each night from the scorecards.
+   results:    status "pending" | "final". 2-pt sessions use {yg,og}
+               points (halves ok); match-play uses {yg,og} out of 4.
+   individual: stroke race, EXCLUDES The Sandbox. par = total par of
+               scored holes (Mammoth 73 + Lido 72 = 145 through 36).
+   skins:      counts per player; each skin is a flat $16 (8 x $2).
+   Last updated: Thu 7/9 (Sandbox + Mammoth + Lido complete).
+   ============================================================ */
 const EMPTY = {
-  results: SESSIONS.map(s=>({id:s.id, status:"pending", yg:0, og:0, blurb:""})),
-  individual: TEAMS.yg.players.concat(TEAMS.og.players).map(p=>({name:p.name, played:0, gross:0, net:0, par:0})),
-  mvp:null, potw:null,
-  skins:{pot:0, claimed:0, carrying:0, list:[],
-    byPlayer: TEAMS.yg.players.concat(TEAMS.og.players).map(p=>({name:p.name, dollars:0, skins:0})),
-    note:"No holes played yet. The first skin is live Wednesday on The Sandbox."},
-  meta:{status:"Pre-trip · first tee Wednesday 5:30 PM", updated:""}
-};
-
-/* Sample data for the preview toggle (through Friday). */
-const DEMO = {
   results:[
-    {id:1, status:"final", yg:1.5, og:0.5, blurb:"YG took the front, halved the back on The Sandbox."},
-    {id:2, status:"final", yg:0,   og:2,   blurb:"Old Guard swept both nines at Mammoth Dunes."},
-    {id:3, status:"final", yg:1,   og:1,   blurb:"Traded nines at The Lido — split points."},
-    {id:4, status:"final", yg:2,   og:0,   blurb:"Young Guns ran away with Modified Stableford at The Commons."},
-    {id:5, status:"pending", yg:0, og:0, blurb:""},
-    {id:6, status:"pending", yg:0, og:0, blurb:""},
-    {id:7, status:"pending", yg:0, og:0, blurb:""}
+    {id:1, status:"final",   yg:0.5, og:1.5, blurb:"Old Guard took the front; back nine halved."},
+    {id:2, status:"final",   yg:2,   og:0,   blurb:"Young Guns swept both nines at Mammoth Dunes."},
+    {id:3, status:"final",   yg:1.5, og:0.5, blurb:"Young Guns won the front; back nine halved at The Lido."},
+    {id:4, status:"pending", yg:0,   og:0,   blurb:""},
+    {id:5, status:"pending", yg:0,   og:0,   blurb:""},
+    {id:6, status:"pending", yg:0,   og:0,   blurb:""},
+    {id:7, status:"pending", yg:0,   og:0,   blurb:""}
   ],
-  /* par = total par of holes played through Friday (Sandbox 51 + Mammoth 73 + Lido 72 + Commons 45 = 241) */
   individual:[
-    {name:"Griffin Haddad", played:4, gross:289, net:251, par:241},
-    {name:"Radley Haddad",  played:4, gross:271, net:246, par:241},
-    {name:"John Smeltzer",  played:4, gross:279, net:248, par:241},
-    {name:"Bob Haddad",     played:4, gross:292, net:252, par:241},
-    {name:"Steve Hullett",  played:4, gross:285, net:250, par:241},
-    {name:"Andru Creighton",played:4, gross:297, net:254, par:241},
-    {name:"Zak Estes",      played:4, gross:312, net:256, par:241},
-    {name:"Mike Essex",     played:4, gross:318, net:258, par:241}
+    {name:"Radley Haddad",  played:36, gross:153, net:145, par:145},
+    {name:"Griffin Haddad", played:36, gross:167, net:147, par:145},
+    {name:"Andru Creighton",played:36, gross:164, net:138, par:145},
+    {name:"Zak Estes",      played:36, gross:177, net:138, par:145},
+    {name:"John Smeltzer",  played:36, gross:159, net:150, par:145},
+    {name:"Steve Hullett",  played:36, gross:173, net:158, par:145},
+    {name:"Bob Haddad",     played:36, gross:151, net:132, par:145},
+    {name:"Mike Essex",     played:36, gross:189, net:153, par:145}
   ],
-  mvp:{who:"Bob Haddad", desc:"Low round of the day — net 68 at The Commons, birthday boy delivered."},
-  potw:{who:"Radley Haddad", desc:"Lowest net for the week at +5 through Friday."},
-  skins:{pot:1040, claimed:31, carrying:4,
+  mvp:{who:"Bob Haddad",  desc:"Low round of the day — net 65 at Mammoth Dunes."},
+  potw:{who:"Bob Haddad", desc:"Lowest net for the week at 13 under (132) through 36 holes."},
+  skins:{pot:848, claimed:47, carrying:6,
     byPlayer:[
-      {name:"Radley Haddad",  dollars:208, skins:6},
-      {name:"John Smeltzer",  dollars:176, skins:5},
-      {name:"Zak Estes",      dollars:144, skins:4},
-      {name:"Bob Haddad",     dollars:128, skins:5},
-      {name:"Steve Hullett",  dollars:112, skins:4},
-      {name:"Griffin Haddad", dollars:96,  skins:3},
-      {name:"Andru Creighton",dollars:64,  skins:2},
-      {name:"Mike Essex",     dollars:48,  skins:2}
+      {name:"Mike Essex",     dollars:208, skins:13},
+      {name:"Andru Creighton",dollars:176, skins:11},
+      {name:"Steve Hullett",  dollars:80,  skins:5},
+      {name:"Griffin Haddad", dollars:64,  skins:4},
+      {name:"Radley Haddad",  dollars:64,  skins:4},
+      {name:"Zak Estes",      dollars:64,  skins:4},
+      {name:"John Smeltzer",  dollars:48,  skins:3},
+      {name:"Bob Haddad",     dollars:48,  skins:3}
     ],
-    list:[
-      {who:"Radley Haddad", where:"The Commons · 8", val:"$96 (6 carried)"},
-      {who:"Zak Estes",     where:"The Lido · 14",   val:"$32"},
-      {who:"John Smeltzer", where:"Mammoth · 5",     val:"$48 (3 carried)"},
-      {who:"Griffin Haddad",where:"The Sandbox · 12",val:"$16"}
-    ],
-    note:"4 holes carrying into Saturday at Sand Valley — worth $64 to the first man to break it."},
-  meta:{status:"Day 3 · Old Guard chasing at Sand Valley Saturday", updated:"Fri 10:40 PM"}
+    note:"47 skins claimed for $752. Six holes pushed, leaving $96 still live in the pot."},
+  meta:{status:"Day 2 complete · Young Guns lead 4–2", updated:"Thu, Jul 9"}
 };
 
 /* ---------- helpers ---------- */
@@ -641,35 +624,29 @@ function renderRosters(){
   });
 }
 
-/* countdown to first tee: 2026-07-08 17:30 local */
+/* countdown to first tee: 2026-07-08 17:30 local. Once underway, hide it. */
+let cdTimer = null;
 function tick(){
   const target = new Date(2026,6,8,17,30,0).getTime();
   const now = Date.now();
-  let d = Math.max(0, target-now);
+  const cd = $("#countdown");
+  if(now >= target){ cd.style.display="none"; if(cdTimer) clearInterval(cdTimer); return; }
+  let d = target-now;
   const days = Math.floor(d/864e5); d-=days*864e5;
   const hrs = Math.floor(d/36e5); d-=hrs*36e5;
   const min = Math.floor(d/6e4); d-=min*6e4;
   const sec = Math.floor(d/1e3);
-  const cd = $("#countdown");
   const parts = [["Days",days],["Hrs",hrs],["Min",min],["Sec",sec]];
   cd.innerHTML = parts.map(([k,v])=>`<div class="cd-unit"><div class="cd-num tnum">${String(v).padStart(2,"0")}</div><div class="cd-lab">${k}</div></div>`).join("");
 }
 
 /* ---------- boot ---------- */
-let showingDemo = false;
 renderRosters();
 render(EMPTY);
-tick(); setInterval(tick,1000);
+tick(); cdTimer = setInterval(tick,1000);
 
 document.querySelectorAll(".lb th.sortable").forEach(th=>{
   th.addEventListener("click",()=>{ sortKey = th.dataset.sort; renderLeaderboard(); });
-});
-
-$("#demo-btn").addEventListener("click",()=>{
-  showingDemo = !showingDemo;
-  render(showingDemo?DEMO:EMPTY);
-  $("#demo-btn").textContent = showingDemo?"Reset to pre-trip":"Show sample scores";
-  $("#demo-label").textContent = showingDemo?"Sample data (through Friday)":"Preview mode";
 });
 </script>
 
