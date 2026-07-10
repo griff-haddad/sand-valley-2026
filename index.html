@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<meta name="build-id" content="20260705-102246" />
+<meta name="build-id" content="20260709-195752" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Sand Valley 2026 | July 8 to 12</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -188,24 +188,6 @@
     box-shadow: var(--shadow-sm);
   }
   .pill-dot { width: 8px; height: 8px; border-radius: 50%; }
-
-  /* Countdown */
-  .countdown {
-    margin: 44px auto 0; max-width: 720px;
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
-  }
-  .count-box {
-    background: white; border: 1px solid var(--line); border-radius: 12px;
-    padding: 18px 8px; box-shadow: var(--shadow-sm);
-  }
-  .count-num {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 38px; line-height: 1; color: var(--ink);
-  }
-  .count-label {
-    font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-soft);
-    margin-top: 6px;
-  }
 
   /* ===== Section ===== */
   section { padding: 80px 28px; }
@@ -708,12 +690,6 @@
     <div class="pill">5 Days</div>
   </div>
 
-  <div class="countdown" id="countdown">
-    <div class="count-box"><div class="count-num" id="cd-days">--</div><div class="count-label">Days</div></div>
-    <div class="count-box"><div class="count-num" id="cd-hours">--</div><div class="count-label">Hours</div></div>
-    <div class="count-box"><div class="count-num" id="cd-mins">--</div><div class="count-label">Minutes</div></div>
-    <div class="count-box"><div class="count-num" id="cd-secs">--</div><div class="count-label">Seconds</div></div>
-  </div>
 </header>
 
 <!-- ====================== SCHEDULE ====================== -->
@@ -1646,23 +1622,6 @@
       forecasts.forEach(el => el.remove());
     }
   })();
-
-  // ---- Countdown ----
-  const target = new Date('2026-07-08T16:00:00-05:00').getTime();
-  function tick() {
-    const now = Date.now();
-    let diff = Math.max(0, target - now);
-    const d = Math.floor(diff / 86400000); diff -= d * 86400000;
-    const h = Math.floor(diff / 3600000);  diff -= h * 3600000;
-    const m = Math.floor(diff / 60000);    diff -= m * 60000;
-    const s = Math.floor(diff / 1000);
-    document.getElementById('cd-days').textContent  = d;
-    document.getElementById('cd-hours').textContent = h;
-    document.getElementById('cd-mins').textContent  = m;
-    document.getElementById('cd-secs').textContent  = s;
-  }
-  tick();
-  setInterval(tick, 1000);
 
   // ---- Update check (polls every 3 min for a new build; shows toast if new) ----
   (function() {
