@@ -35,7 +35,15 @@ fi
 
 git add "$FILE" "$CUP"
 git commit -m "$COMMIT_MSG (build $BUILD_ID)" > /dev/null
-git push origin main > /dev/null 2>&1
+
+# The itinerary deploys from a separate clone, so origin may be ahead of this
+# one. Rebase onto it before pushing so we never fail with a non-fast-forward.
+git pull --rebase origin main
+
+if ! git push origin main; then
+  echo "Push failed (see the error above). Fix it, then run: git push origin main"
+  exit 1
+fi
 
 echo "✓ Scoreboard deployed. Build ID: $BUILD_ID"
 echo "  Live URL: https://griff-haddad.github.io/sand-valley-2026/scoreboard/"
