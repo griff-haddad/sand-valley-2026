@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="build-id" content="20260711-213417" />
+<meta name="build-id" content="20260711-213845" />
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -119,6 +119,9 @@
   .ses .fmt{font-size:12.5px;color:var(--ink-soft)}
   .pts-badge{font-size:11px;font-weight:600;letter-spacing:.04em;background:var(--sand-100);
     color:var(--sand-700);border-radius:999px;padding:4px 10px;white-space:nowrap}
+  .pts-badge.exo{background:var(--gold-soft);color:var(--gold-ink)}
+  .ses.exo{border-style:dashed;background:var(--sand-50)}
+  .ses.exo h3,.ses.exo .sesno{color:var(--gold-ink)}
   .ses-result{border-top:1px dashed var(--line);padding:13px 17px;margin-top:auto;background:var(--sand-50)}
   .ses.pending .ses-result{color:var(--ink-soft);font-size:13px;font-style:italic;font-family:var(--serif)}
   .res-line{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -409,9 +412,9 @@ const SESSIONS = [
   {id:3, day:"Thu 7/9",  course:"The Lido",      fmt:"Best Ball",      detail:"2 of 4 front · 3 of 4 back", note:"Net best ball, count best N per nine.", pts:2},
   {id:4, day:"Fri 7/10", course:"The Commons",   fmt:"Mod. Stableford",detail:"3 of 4 front · 4 of 4 back", note:"Eagle +5, birdie +3, par +1, bogey 0, double −1. 65% handicap.", pts:2},
   {id:5, day:"Sat 7/11", course:"Sand Valley",   fmt:"Singles Match Play", detail:"4 matches · captain's order 1–4", note:"1 point per match. 1v1, 2v2, 3v3, 4v4.", pts:4},
-  {id:6, day:"Sat 7/11", course:"Sedge Valley",  fmt:"Singles Match Play", detail:"4 matches · captain's order 1–4", note:"1 point per match.", pts:4}
+  {id:6, day:"Sat 7/11", course:"Sedge Valley",  fmt:"Singles Match Play", detail:"4 matches · captain's order 1–4", note:"1 point per match.", pts:4},
+  {id:7, day:"Sun 7/12", course:"Mammoth Dunes", fmt:"Best Ball", detail:"Friendly round", note:"Played for fun — not counted toward the Cup.", pts:2, exhibition:true}
 ];
-/* Sunday's Mammoth Dunes round is a friendly exhibition, not part of the Cup. */
 
 /* ============================================================
    LIVE DATA — updated each night from the scorecards.
@@ -429,7 +432,8 @@ const EMPTY = {
     {id:3, status:"final",   yg:1.5, og:0.5, blurb:"Young Guns won the front; back nine halved at The Lido."},
     {id:4, status:"final",   yg:1,   og:1,   blurb:"Split at The Commons — Young Guns took the front six, Old Guard the back."},
     {id:5, status:"final",   yg:2,   og:2,   blurb:"Singles split at Sand Valley — two matches apiece."},
-    {id:6, status:"final",   yg:3,   og:1,   blurb:"Young Guns take Sedge 3–1 to clinch the Cup."}
+    {id:6, status:"final",   yg:3,   og:1,   blurb:"Young Guns take Sedge 3–1 to clinch the Cup."},
+    {id:7, status:"pending", yg:0,   og:0,   blurb:""}
   ],
   /* 72 holes: Mammoth 73 + Lido 72 + Sand Valley 72 + Sedge 68 = par 285.
      The Sandbox (par 3) and The Commons (no cards logged) are excluded. */
@@ -469,9 +473,10 @@ const $ = s=>document.querySelector(s);
 
 /* ---------- render ---------- */
 function render(D){
-  const totYg = D.results.reduce((a,r)=>a+(r.status==="final"?r.yg:0),0);
-  const totOg = D.results.reduce((a,r)=>a+(r.status==="final"?r.og:0),0);
-  const played = D.results.reduce((a,r)=>a+(r.status==="final"?SESSIONS.find(s=>s.id===r.id).pts:0),0);
+  const isExo = id => !!(SESSIONS.find(s=>s.id===id)||{}).exhibition;   // exhibitions don't count
+  const totYg = D.results.reduce((a,r)=>a+((r.status==="final"&&!isExo(r.id))?r.yg:0),0);
+  const totOg = D.results.reduce((a,r)=>a+((r.status==="final"&&!isExo(r.id))?r.og:0),0);
+  const played = D.results.reduce((a,r)=>a+((r.status==="final"&&!isExo(r.id))?SESSIONS.find(s=>s.id===r.id).pts:0),0);
 
   $("#score-yg").textContent = fmtPt(totYg);
   $("#score-og").textContent = fmtPt(totOg);
@@ -481,13 +486,13 @@ function render(D){
   $("#remain-pts").textContent = CUP_TOTAL - played;
   $("#status-text").textContent = D.meta.status;
 
-  // bar: each side's share of the full 18
+  // bar: each side's share of the 16 counting points
   $("#fill-yg").style.width = (totYg/CUP_TOTAL*100)+"%";
   $("#fill-og").style.width = (totOg/CUP_TOTAL*100)+"%";
 
-  // rail: one segment per session, sized by points
+  // rail: one segment per counting session, sized by points (exhibitions excluded)
   const rail = $("#rail"); rail.innerHTML="";
-  SESSIONS.forEach(s=>{
+  SESSIONS.filter(s=>!s.exhibition).forEach(s=>{
     const r = D.results.find(x=>x.id===s.id);
     const seg = document.createElement("div"); seg.className="seg"; seg.style.flex=s.pts;
     if(r.status==="final"){
@@ -503,10 +508,13 @@ function render(D){
   const wrap = $("#sessions"); wrap.innerHTML="";
   SESSIONS.forEach(s=>{
     const r = D.results.find(x=>x.id===s.id);
+    const exo = !!s.exhibition;
     const el = document.createElement("div");
-    el.className = "ses "+(r.status==="final"?"final":"pending");
+    el.className = "ses "+(exo?"exo ":"")+(r.status==="final"&&!exo?"final":"pending");
     let resultHtml;
-    if(r.status==="final"){
+    if(exo){
+      resultHtml = `<span style="font-style:italic;font-family:var(--serif)">Friendly round — not counted for the Cup</span>`;
+    } else if(r.status==="final"){
       const win = r.yg>r.og?"yg":r.og>r.yg?"og":"halved";
       const label = win==="yg"?"Young Guns":win==="og"?"Old Guard":"Halved";
       resultHtml = `<div class="res-line">
@@ -519,18 +527,18 @@ function render(D){
     el.innerHTML = `
       <div class="ses-top">
         <div>
-          <div class="sesno">Session ${s.id}</div>
+          <div class="sesno">${exo?"Exhibition":"Session "+s.id}</div>
           <h3>${s.course}</h3>
           <div class="day">${s.day}</div>
-          <div class="fmt">${s.fmt} · ${s.pts} pts</div>
+          <div class="fmt">${s.fmt}${exo?"":" · "+s.pts+" pts"}</div>
         </div>
-        <span class="pts-badge">${s.fmt}</span>
+        <span class="pts-badge${exo?" exo":""}">${exo?"Exhibition":s.fmt}</span>
       </div>
       <div class="ses-result">${resultHtml}</div>
       <div class="ses-detail"><div class="ses-detail-in">
         <div class="dl"><span>Format</span><span>${s.fmt}</span></div>
-        <div class="dl"><span>Counting</span><span>${s.detail}</span></div>
-        <div class="dl"><span>Points</span><span>${s.pts}</span></div>
+        <div class="dl"><span>Counting</span><span>${exo?"Not counted":s.detail}</span></div>
+        <div class="dl"><span>Points</span><span>${exo?"Exhibition — 0 to the Cup":s.pts}</span></div>
         <div class="dl"><span>Notes</span><span>${s.note}</span></div>
       </div></div>`;
     el.addEventListener("click",()=>el.classList.toggle("open"));
